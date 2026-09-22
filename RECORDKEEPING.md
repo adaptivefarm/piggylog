@@ -165,10 +165,17 @@ grep -c 'DATA:LOG\|DATA:FEEDCOST\|var stamp' index.html
 ```
 
 ```bash
-# 4 — Setup placeholders. An untouched starter has dozens; a farm that has been
-#     set up should report 0. Anything in between means setup stopped halfway.
-grep -c 'SETUP NEEDED' index.html
+# 4 — Setup placeholders still showing on the page.
+#     Strip comments first: index.html's header comment explains the
+#     "SETUP NEEDED" convention in prose, so a plain count can never reach 0
+#     and the gate can never pass.
+perl -0pe 's/<!--.*?-->//gs' index.html | grep -c 'SETUP NEEDED'
 ```
+
+An untouched starter reports 38. A farm that is set up reports 0. Anything in between
+means setup stopped partway — find what is still missing and ask the farmer for it.
+If a value is genuinely unknown rather than not yet asked about, replace the
+placeholder with `TBD`, so the gate can reach 0 while the gap stays visible on the page.
 
 ```bash
 # 5 — Every daily log is where its name says it is.
