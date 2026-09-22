@@ -1,0 +1,8 @@
+# Only index.html is published. Ignore everything, then allow that one file back.
+#
+# This is the file that keeps your daily logs, prices, buyer names and health
+# records off the internet. Changing it changes what the world can read.
+#
+# node_modules, hidden files and symlinks are already ignored by wrangler.
+*
+!index.html

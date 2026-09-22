@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>piggylog — farm record</title>
+
+<!--
+  ┌──────────────────────────────────────────────────────────────────────────┐
+  │  THIS FILE IS THE FARM RECORD.                                           │
+  │                                                                          │
+  │  It holds everything about now and forward: how many pigs, what they     │
+  │  weigh, what they eat, what is planned, what it costs. An agent edits    │
+  │  these sections DIRECTLY — there is no build step that generates them.   │
+  │                                                                          │
+  │  History lives elsewhere, in append-only markdown: logs/, finance/,      │
+  │  health/, compost/. State here, history there. See CLAUDE.md.            │
+  │                                                                          │
+  │  Three values are injected by scripts/build-dashboard.js between the     │
+  │  marker comments. DO NOT hand-edit between them — they get overwritten:  │
+  │      DATA:LOG ……… the most recent daily log                              │
+  │      DATA:FEEDCOST … running feed spend, from finance/feed-costs.md      │
+  │      var stamp ……… when the script last ran                              │
+  │  Everything else is hand-edited.                                         │
+  │                                                                          │
+  │  NEW FARM? Replace every "SETUP NEEDED" below. Work through the setup    │
+  │  questions in CLAUDE.md with the farmer first — do not guess.            │
+  └──────────────────────────────────────────────────────────────────────────┘
+-->
+
+<style>
+  :root {
+    --ivory:  #FAF9F5;
+    --slate:  #141413;
+    --clay:   #D97757;
+    --oat:    #E3DACC;
+    --olive:  #788C5D;
+    --rust:   #B04A3F;
+    --g100:   #F0EEE6;
+    --g300:   #D1CFC5;
+    --g500:   #87867F;
+    --g700:   #3D3D3A;
+    --serif:  ui-serif, Georgia, 'Times New Roman', serif;
+    --sans:   system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    --mono:   ui-monospace, 'SF Mono', Menlo, Monaco, Consolas, monospace;
+    --radius: 12px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+  body {
+    background: var(--ivory);
+    color: var(--g700);
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.6;
+    padding: 32px 16px 80px;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; }
+
+  /* ── Header ──────────────────────────────────────────── */
+  header {
+    display: flex; flex-wrap: wrap; gap: 16px;
+    align-items: flex-end; justify-content: space-between;
+    padding-bottom: 20px; margin-bottom: 28px;
+    border-bottom: 1.5px solid var(--g300);
+  }
+  .brand { display: flex; align-items: center; gap: 14px; min-width: 0; }
+  .mark {
+    width: 44px; height: 44px; flex: 0 0 44px;
+    display: grid; place-items: center;
+    background: var(--oat); border-radius: var(--radius); font-size: 22px;
+  }
+  h1 {
+    font-family: var(--serif); font-weight: 500; font-size: 30px;
+    line-height: 1.15; color: var(--slate); letter-spacing: -0.015em;
+  }
+  .sub { font-size: 13.5px; color: var(--g500); margin-top: 2px; }
+  .updated { font-family: var(--mono); font-size: 11.5px; color: var(--g500); text-align: right; }
+  .updated .label { text-transform: uppercase; letter-spacing: 0.08em; }
+
+  /* ── Card grid ───────────────────────────────────────── */
+  .grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 16px; }
+  .card {
+    grid-column: span 3;
+    min-width: 0;            /* grid items default to min-width:auto, which lets a
+                                wide table push the whole page sideways instead of
+                                scrolling inside .tbl-scroll. Do not remove. */
+    background: #fff; border: 1px solid var(--g300);
+    border-radius: var(--radius); padding: 18px 20px 20px;
+  }
+  .grid > * { min-width: 0; }
+  .card.wide { grid-column: span 6; }
+  @media (max-width: 880px) {
+    .grid { grid-template-columns: 1fr; }
+    .card, .card.wide { grid-column: 1 / -1; }
+    body { padding: 24px 14px 64px; }
+    h1 { font-size: 25px; }
+    .updated { text-align: left; }
+  }
+
+  .card h2 {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+    font-family: var(--sans); font-size: 11.5px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--g500); margin-bottom: 14px;
+    scroll-margin-top: 20px;
+  }
+  .card h2 .ic { font-size: 15px; }
+
+  /* Label/value rows */
+  .rows { display: flex; flex-direction: column; gap: 9px; }
+  .row { display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: baseline; }
+  .k {
+    flex: 0 0 116px; min-width: 0;
+    font-family: var(--mono); font-size: 11px;
+    text-transform: uppercase; letter-spacing: 0.06em; color: var(--g500);
+  }
+  .v { flex: 1 1 200px; min-width: 0; font-size: 14px; overflow-wrap: anywhere; }
+  .v strong { color: var(--slate); font-weight: 600; }
+
+  /* Big number */
+  .big {
+    font-family: var(--serif); font-size: 32px; line-height: 1.1;
+    color: var(--slate); font-weight: 500;
+  }
+  .big .unit { font-family: var(--sans); font-size: 13px; color: var(--g500); font-weight: 400; }
+  .bignote { font-size: 12.5px; color: var(--g500); margin-top: 4px; }
+
+  /* Tables */
+  .tbl-scroll { overflow-x: auto; max-width: 100%; margin: 0 -4px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  td { overflow-wrap: anywhere; }
+  th {
+    font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em;
+    color: var(--g500); text-align: left; white-space: nowrap;
+    padding: 6px 10px; border-bottom: 1.5px solid var(--g300);
+  }
+  td { padding: 8px 10px; border-bottom: 1px solid var(--g100); vertical-align: top; }
+  td.num, th.num { text-align: right; }
+  tbody tr:last-child td { border-bottom: none; }
+
+  /* Chips + placeholders */
+  .chip {
+    display: inline-block; font-family: var(--mono); font-size: 10.5px;
+    text-transform: uppercase; letter-spacing: 0.06em;
+    padding: 2px 7px; border-radius: 20px; white-space: nowrap;
+  }
+  .chip-todo { background: var(--oat); color: #6b5638; }
+  .chip-ok   { background: #E8EDE0; color: #47582f; }
+  .chip-warn { background: #F6E0DC; color: var(--rust); }
+  .todo {
+    font-family: var(--mono); font-size: 12px; color: var(--rust);
+    background: #F6E0DC; padding: 1px 6px; border-radius: 4px; white-space: nowrap;
+  }
+
+  /* Empty-state note */
+  .empty {
+    border-left: 3px solid var(--oat); background: var(--g100);
+    padding: 12px 14px; border-radius: 0 8px 8px 0;
+    font-size: 13.5px; color: var(--g700);
+  }
+  .empty strong { color: var(--slate); }
+
+  /* Checklist */
+  ul.checklist { list-style: none; display: flex; flex-direction: column; gap: 9px; }
+  ul.checklist li { display: flex; gap: 10px; align-items: flex-start; font-size: 13.5px; }
+  .box {
+    flex: 0 0 15px; width: 15px; height: 15px; margin-top: 2px;
+    border: 1.5px solid var(--g300); border-radius: 4px; background: #fff;
+  }
+  .box.done { background: var(--olive); border-color: var(--olive); position: relative; }
+  .box.done::after {
+    content: "✓"; position: absolute; inset: 0;
+    color: #fff; font-size: 11px; line-height: 13px; text-align: center;
+  }
+
+  /* Today's log */
+  .entry { display: flex; gap: 16px; align-items: flex-start; }
+  .when {
+    flex: 0 0 58px; text-align: center; background: var(--g100);
+    border-radius: 10px; padding: 8px 0;
+    font-family: var(--mono); font-size: 11px; text-transform: uppercase;
+    letter-spacing: 0.06em; color: var(--g500);
+  }
+  .when b { display: block; font-family: var(--serif); font-size: 21px; color: var(--slate); letter-spacing: 0; }
+  .entry .body { flex: 1 1 auto; min-width: 0; font-size: 14px; }
+  .entry .meta { font-family: var(--mono); font-size: 11px; color: var(--g500); margin-top: 5px; }
+
+  /* ── Detail sections ─────────────────────────────────── */
+  .detail-head {
+    font-family: var(--serif); font-weight: 500; font-size: 22px; color: var(--slate);
+    margin: 44px 0 6px;
+  }
+  .detail-intro { font-size: 13.5px; color: var(--g500); margin-bottom: 16px; }
+  details.detail {
+    background: #fff; border: 1px solid var(--g300);
+    border-radius: var(--radius); margin-bottom: 12px;
+  }
+  details.detail > summary {
+    cursor: pointer; list-style: none; padding: 15px 20px;
+    display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: baseline;
+    font-weight: 600; font-size: 14.5px; color: var(--slate);
+    scroll-margin-top: 20px;
+  }
+  details.detail > summary::-webkit-details-marker { display: none; }
+  summary .tw { color: var(--clay); font-size: 11px; transition: transform .15s; }
+  details[open] > summary .tw { transform: rotate(90deg); display: inline-block; }
+  summary .scnt { font-family: var(--mono); font-size: 11px; font-weight: 400; color: var(--g500); margin-left: auto; }
+  .detail-body { padding: 4px 20px 20px; border-top: 1px solid var(--g100); }
+  .detail-body h4 {
+    font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em;
+    color: var(--g500); margin: 20px 0 8px;
+  }
+  .detail-body p { font-size: 14px; margin-bottom: 10px; }
+  .detail-body ul { margin: 0 0 10px 18px; font-size: 14px; }
+  .detail-body li { margin-bottom: 4px; }
+  code {
+    font-family: var(--mono); font-size: 12.5px;
+    background: var(--g100); padding: 1px 5px; border-radius: 4px;
+  }
+  a { color: var(--clay); text-decoration-color: var(--oat); text-underline-offset: 3px; }
+  a:hover { text-decoration-color: var(--clay); }
+
+  footer {
+    margin-top: 40px; padding-top: 18px; border-top: 1px solid var(--g300);
+    font-size: 12.5px; color: var(--g500);
+  }
+</style>
+</head>
+
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="brand">
+      <div class="mark" aria-hidden="true">🐖</div>
+      <div>
+        <h1>SETUP NEEDED — farm name</h1>
+        <p class="sub">Pig records · one file, no internet needed</p>
+      </div>
+    </div>
+    <div class="updated">
+      <span class="label">Last updated</span><br>
+      <span id="last-updated">—</span>
+    </div>
+  </header>
+
+  <!-- ══════════════════ FIRST-RUN NOTICE ══════════════════
+       Delete this whole <section> once the farm is set up. -->
+  <section class="card wide" id="first-run" style="border-color:var(--clay);border-width:1.5px;">
+    <h2><span class="ic" aria-hidden="true">👋</span> Start here</h2>
+    <p style="font-size:14.5px;margin-bottom:12px;">
+      This farm record is <strong>empty</strong>. Nothing below is real — the numbers are
+      placeholders showing where things go.
+    </p>
+    <p style="font-size:14.5px;margin-bottom:12px;">
+      Open this folder with an AI coding assistant and say:
+      <strong>“Help me set up records for my pig farm.”</strong>
+      It will ask about your pigs, your feed and your costs, then fill this page in.
+    </p>
+    <p style="font-size:13.5px;color:var(--g500);">
+      Agents: work through the setup questions in <code>CLAUDE.md</code> with the farmer
+      before writing anything here. Replace every <span class="todo">SETUP NEEDED</span>,
+      then delete this section.
+    </p>
+  </section>
+
+  <!-- ══════════════════ SUMMARY CARDS ══════════════════ -->
+  <main class="grid" id="dashboard" style="margin-top:16px;">
+
+    <!-- ─── Herd ─── -->
+    <section class="card wide" id="roster">
+      <h2><span class="ic" aria-hidden="true">🐷</span> The pigs <span class="chip chip-todo" style="margin-left:auto;">no pigs recorded</span></h2>
+      <div class="tbl-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Pig</th><th>Sex</th><th class="num">Weight (kg)</th>
+              <th>Last weighed</th><th>Status</th><th>Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td colspan="6" style="color:var(--g500);font-size:13px;padding:14px 10px;">
+                No pigs recorded yet. One row per pig — <code>pig-01</code>, <code>pig-02</code>, …
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ─── Feed ─── -->
+    <section class="card" id="feed">
+      <h2><span class="ic" aria-hidden="true">🌾</span> Feed</h2>
+      <div class="rows">
+        <div class="row"><span class="k">Feeding now</span><span class="v"><span class="todo">SETUP NEEDED</span> — which feed, and measured or ad lib</span></div>
+        <div class="row"><span class="k">Daily intake</span><span class="v"><span class="todo">SETUP NEEDED</span> — kg/day across the herd</span></div>
+        <div class="row"><span class="k">On hand</span><span class="v"><span class="todo">SETUP NEEDED</span> — sacks left, and roughly how long they last</span></div>
+        <div class="row"><span class="k">Price</span><span class="v"><span class="todo">SETUP NEEDED</span> — ₱ per sack, and kg per sack</span></div>
+        <div class="row"><span class="k">Buy next</span><span class="v"><span class="todo">SETUP NEEDED</span> — when, and how many sacks</span></div>
+      </div>
+      <p class="empty" style="margin-top:14px;">
+        Detail — transitions, how feed is portioned, purchase history → <a href="#feeds">Feeds</a>
+      </p>
+    </section>
+
+    <!-- ─── Health & housing ─── -->
+    <section class="card" id="health">
+      <h2><span class="ic" aria-hidden="true">💉</span> Health &amp; housing</h2>
+      <ul class="checklist">
+        <li><span class="box"></span><span><span class="todo">SETUP NEEDED</span> — next vaccination due, and which one</span></li>
+        <li><span class="box"></span><span><span class="todo">SETUP NEEDED</span> — next deworming due</span></li>
+        <li><span class="box"></span><span><span class="todo">SETUP NEEDED</span> — pens, and space per pig</span></li>
+      </ul>
+      <p class="empty" style="margin-top:14px;">
+        The routine plan lives in <a href="health/protocols.md">health/protocols.md</a>.
+        Every shot actually given goes in <a href="health/interventions.md">interventions.md</a>.
+      </p>
+    </section>
+
+    <!-- ─── Money ─── -->
+    <section class="card" id="money">
+      <h2><span class="ic" aria-hidden="true">💰</span> Money</h2>
+      <div class="big">₱<!-- DATA:FEEDCOST -->0<!-- /DATA:FEEDCOST --> <span class="unit">spent on feed</span></div>
+      <p class="bignote">Added up from <a href="finance/feed-costs.md">finance/feed-costs.md</a> every time the dashboard script runs.</p>
+      <div class="rows" style="margin-top:14px;">
+        <div class="row"><span class="k">Pigs cost</span><span class="v"><span class="todo">SETUP NEEDED</span></span></div>
+        <div class="row"><span class="k">Other costs</span><span class="v"><span class="todo">SETUP NEEDED</span></span></div>
+        <div class="row"><span class="k">Earned</span><span class="v">₱0 — nothing sold yet</span></div>
+        <div class="row"><span class="k">Break even at</span><span class="v"><span class="todo">SETUP NEEDED</span> — ₱ per kg live weight</span></div>
+      </div>
+    </section>
+
+    <!-- ─── What's coming ─── -->
+    <section class="card" id="coming">
+      <h2><span class="ic" aria-hidden="true">📅</span> What's coming</h2>
+      <div class="rows">
+        <div class="row"><span class="k">Next weigh-in</span><span class="v"><span class="todo">SETUP NEEDED</span></span></div>
+        <div class="row"><span class="k">Next feed buy</span><span class="v"><span class="todo">SETUP NEEDED</span></span></div>
+        <div class="row"><span class="k">Ready to sell</span><span class="v"><span class="todo">SETUP NEEDED</span> — estimated date and weight</span></div>
+      </div>
+      <p class="empty" style="margin-top:14px;">
+        These are <strong>estimates</strong>, and they go stale. Redo them after every
+        weigh-in → <a href="#schedule">Schedule</a>
+      </p>
+    </section>
+
+    <!-- ─── Latest log ─── -->
+    <section class="card wide" id="log">
+      <h2><span class="ic" aria-hidden="true">📓</span> Latest daily log</h2>
+      <div class="entry">
+        <!-- DATA:LOG -->
+        <span class="when">—</span><div class="body">No daily log yet.</div>
+        <!-- /DATA:LOG -->
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ══════════════════ DETAIL SECTIONS ══════════════════ -->
+  <h2 class="detail-head">Detail</h2>
+  <p class="detail-intro">
+    The full picture behind each card. Edit these directly — they are the record, not a
+    report generated from something else.
+  </p>
+
+  <details class="detail" id="batch">
+    <summary><span class="tw" aria-hidden="true">▸</span> Batch — where the pigs came from <span class="scnt">SETUP NEEDED</span></summary>
+    <div class="detail-body">
+      <p class="empty">
+        <strong>A batch is one group of pigs bought or born together.</strong> Its name is the
+        date it arrived plus a number: <code>2026-01-10-batch-01</code>. Most farms have one
+        batch at a time. Keep each batch in its own block here.
+      </p>
+      <h4>Batch facts</h4>
+      <div class="rows">
+        <div class="row"><span class="k">Batch</span><span class="v"><span class="todo">SETUP NEEDED</span> — <code>YYYY-MM-DD-batch-NN</code></span></div>
+        <div class="row"><span class="k">Arrived</span><span class="v"><span class="todo">SETUP NEEDED</span></span></div>
+        <div class="row"><span class="k">Head count</span><span class="v"><span class="todo">SETUP NEEDED</span> — and the male/female split</span></div>
+        <div class="row"><span class="k">Age / born</span><span class="v"><span class="todo">SETUP NEEDED</span> — even a rough date helps every estimate</span></div>
+        <div class="row"><span class="k">Breed</span><span class="v"><span class="todo">SETUP NEEDED</span></span></div>
+        <div class="row"><span class="k">Bought for</span><span class="v"><span class="todo">SETUP NEEDED</span> — see <a href="finance/purchases.md">purchases.md</a></span></div>
+        <div class="row"><span class="k">Plan</span><span class="v"><span class="todo">SETUP NEEDED</span> — sell as meat, keep for breeding, or both</span></div>
+      </div>
+      <h4>Weight history</h4>
+      <p>One row per weigh-in day. Weights also go in that day's log under <code>## Weights</code>.</p>
+      <div class="tbl-scroll">
+        <table>
+          <thead><tr><th>Date</th><th class="num">Average (kg)</th><th class="num">Gain (g/day)</th><th>How weighed</th><th>Notes</th></tr></thead>
+          <tbody><tr><td colspan="5" style="color:var(--g500);font-size:13px;">No weigh-ins yet.</td></tr></tbody>
+        </table>
+      </div>
+      <h4>Observations</h4>
+      <p style="color:var(--g500);">Anything about the group worth remembering — temperament, who bullies whom, who is always last to the trough.</p>
+    </div>
+  </details>
+
+  <details class="detail" id="feeds">
+    <summary><span class="tw" aria-hidden="true">▸</span> Feeds — what they eat and what it costs <span class="scnt">SETUP NEEDED</span></summary>
+    <div class="detail-body">
+      <h4>Feeds in use</h4>
+      <div class="tbl-scroll">
+        <table>
+          <thead><tr><th>Feed</th><th>Stage</th><th class="num">₱/sack</th><th class="num">Kg/sack</th><th class="num">₱/kg</th><th>Supplier</th></tr></thead>
+          <tbody><tr><td colspan="6" style="color:var(--g500);font-size:13px;">No feeds recorded yet.</td></tr></tbody>
+        </table>
+      </div>
+      <h4>How feed is portioned</h4>
+      <p class="empty">
+        Some farms pre-portion feed into numbered containers — that turns feeding into a count
+        instead of a guess, and makes intake history accurate for free. Others scoop straight
+        from the sack. <strong>Record what this farm actually does.</strong> If containers are
+        used, write down how many exist and the fill weight, and note the date whenever the
+        fill weight changes. See <code>RECORDKEEPING.md</code>.
+      </p>
+      <h4>Changing feed</h4>
+      <p><span class="todo">SETUP NEEDED</span> — when the herd moves from one stage to the next, and over how many days the old and new feed are mixed.</p>
+      <h4>Buying</h4>
+      <p>Every purchase is a row in <a href="finance/feed-costs.md">finance/feed-costs.md</a>. That file is what the money card adds up.</p>
+    </div>
+  </details>
+
+  <details class="detail" id="housing">
+    <summary><span class="tw" aria-hidden="true">▸</span> Housing — pens, space, waste <span class="scnt">SETUP NEEDED</span></summary>
+    <div class="detail-body">
+      <h4>Pens</h4>
+      <div class="tbl-scroll">
+        <table>
+          <thead><tr><th>Pen</th><th class="num">Size (m²)</th><th class="num">Pigs</th><th class="num">m² per pig</th><th>Floor / bedding</th></tr></thead>
+          <tbody><tr><td colspan="5" style="color:var(--g500);font-size:13px;">No pens recorded yet.</td></tr></tbody>
+        </table>
+      </div>
+      <p class="empty" style="margin-top:12px;">
+        <strong>Space per pig shrinks as they grow, without anything changing.</strong> A pen
+        that fits six weaners does not fit six finishers. Recheck this number after every
+        weigh-in, and ask the vet or the local agriculture office what minimum applies here.
+      </p>
+      <h4>Waste</h4>
+      <p><span class="todo">SETUP NEEDED</span> — how manure is handled, how often, and where it goes. If it is composted, each pile gets a file in <code>compost/</code>.</p>
+    </div>
+  </details>
+
+  <details class="detail" id="schedule">
+    <summary><span class="tw" aria-hidden="true">▸</span> Schedule — what is planned, and why <span class="scnt">SETUP NEEDED</span></summary>
+    <div class="detail-body">
+      <p class="empty">
+        Everything here is an <strong>estimate</strong> built on the last weigh-in and the
+        current feed price. Estimates drift. Redo them after any weigh-in, any change in head
+        count, a sustained change in how much they are eating, or a price move over ~10% — and
+        tell the farmer what moved.
+      </p>
+      <h4>Planned</h4>
+      <ul class="checklist">
+        <li><span class="box"></span><span><span class="todo">SETUP NEEDED</span> — next vaccination</span></li>
+        <li><span class="box"></span><span><span class="todo">SETUP NEEDED</span> — next feed purchase</span></li>
+        <li><span class="box"></span><span><span class="todo">SETUP NEEDED</span> — next feed stage change</span></li>
+        <li><span class="box"></span><span><span class="todo">SETUP NEEDED</span> — target sale or slaughter date</span></li>
+      </ul>
+      <h4>Refinement log</h4>
+      <p>Append-only. One line each time an estimate moves, saying what triggered it. Never rewrite a line here — this is how the farmer sees the forecast was wrong before, and by how much.</p>
+      <div class="tbl-scroll">
+        <table>
+          <thead><tr><th>Date</th><th>What changed</th><th>Why</th></tr></thead>
+          <tbody><tr><td colspan="3" style="color:var(--g500);font-size:13px;">Nothing refined yet.</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </details>
+
+  <details class="detail" id="money-detail">
+    <summary><span class="tw" aria-hidden="true">▸</span> Money — does this batch pay? <span class="scnt">SETUP NEEDED</span></summary>
+    <div class="detail-body">
+      <p class="empty">
+        <strong>The point of this section is one number:</strong> the price per kilo at which
+        this batch breaks even. Below it the farm loses money on every pig. Most farms have
+        never calculated it, and it is usually the most useful thing in the whole repo.
+      </p>
+      <h4>Costs</h4>
+      <div class="tbl-scroll">
+        <table>
+          <thead><tr><th>What</th><th class="num">₱</th><th>Where it comes from</th></tr></thead>
+          <tbody>
+            <tr><td>Pigs</td><td class="num"><span class="todo">TBD</span></td><td><a href="finance/purchases.md">purchases.md</a></td></tr>
+            <tr><td>Feed to date</td><td class="num">₱<!-- injected in the Money card --><span class="todo">TBD</span></td><td><a href="finance/feed-costs.md">feed-costs.md</a></td></tr>
+            <tr><td>Feed still to come</td><td class="num"><span class="todo">TBD</span></td><td>Estimate — days left × daily cost</td></tr>
+            <tr><td>Medicine &amp; supplies</td><td class="num"><span class="todo">TBD</span></td><td><a href="finance/supplies.md">supplies.md</a></td></tr>
+            <tr><td>Housing &amp; equipment</td><td class="num"><span class="todo">TBD</span></td><td><a href="finance/supplies.md">supplies.md</a></td></tr>
+            <tr><td>Slaughter / transport / selling</td><td class="num"><span class="todo">TBD</span></td><td>Ask the farmer</td></tr>
+            <tr><td><strong>Total</strong></td><td class="num"><strong><span class="todo">TBD</span></strong></td><td></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <h4>Yield</h4>
+      <div class="rows">
+        <div class="row"><span class="k">Pigs to sell</span><span class="v"><span class="todo">SETUP NEEDED</span></span></div>
+        <div class="row"><span class="k">Weight each</span><span class="v"><span class="todo">SETUP NEEDED</span> — estimated live weight at sale</span></div>
+        <div class="row"><span class="k">Total kg</span><span class="v"><span class="todo">SETUP NEEDED</span></span></div>
+        <div class="row"><span class="k">Break-even</span><span class="v"><span class="todo">SETUP NEEDED</span> — total cost ÷ total kg</span></div>
+      </div>
+      <p style="margin-top:12px;">
+        Write down which assumptions this rests on. When one turns out wrong, correct it here
+        and add a line to the refinement log in <a href="#schedule">Schedule</a> — do not quietly
+        change the number.
+      </p>
+    </div>
+  </details>
+
+  <footer>
+    <strong>piggylog</strong> — a starter for keeping pig records with an AI assistant.
+    History lives in <code>logs/</code>, <code>finance/</code>, <code>health/</code> and
+    <code>compost/</code>; this page holds the current picture.
+    Instructions for agents: <code>CLAUDE.md</code> and <code>RECORDKEEPING.md</code>.
+    <br>
+    <a href="https://adaptive.farm">adaptive.farm</a> · <code>hello@adaptive.farm</code>
+  </footer>
+
+</div>
+
+<script>
+  // Injector-owned. scripts/build-dashboard.js rewrites the line below.
+  var stamp = "2026-09-22T07:02:32.042Z";
+  (function () {
+    var el = document.getElementById("last-updated");
+    if (!el) return;
+    if (!stamp) { el.textContent = "never — run scripts/build-dashboard.js"; return; }
+    var d = new Date(stamp);
+    el.textContent = isNaN(d) ? stamp : d.toLocaleString();
+  })();
+</script>
+</body>
+</html>
