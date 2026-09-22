@@ -116,8 +116,17 @@ dependency.
 
 ## A note on your data
 
-Everything stays on your computer unless you choose to put it somewhere else. Nothing
-is uploaded anywhere by default.
+Your records are files on your own computer. Nothing here publishes them, and no service
+syncs them anywhere.
+
+One thing to be clear about: **the assistant reads your records to do its job**, which
+means their contents go to whoever makes that assistant, the same way anything else you
+type into it does. That is how it can answer "what have I spent on feed?" If that matters
+for a particular record — a buyer's name, what you were paid — leave it out, or ask the
+assistant to leave it out.
+
+If you put this on GitHub to keep a backup, **make the repository private**, or your farm's
+finances are public.
 
 If you later share this repository publicly, remember that your records are in it —
 buyer names, what you paid, where the farm is. Ask the assistant to check before you
