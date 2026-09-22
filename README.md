@@ -19,31 +19,36 @@ Made for smallholder farms — roughly 5 to 50 head. Prices are in pesos.
 - **Money records** — what you paid for feed, pigs, medicine, and what you earned.
 - **Health records** — every shot and treatment, with the date and the dose.
 
-Everything is plain text. No app to install, no subscription, no account. If you stop
-using the assistant tomorrow, every record is still readable and still yours.
+Everything is plain text. The records themselves need no app, no account and no
+subscription — the assistant that writes them does, and that is covered below. If you
+stop using the assistant tomorrow, every record is still readable and still yours.
 
 ---
 
 ## What you need
 
-**A computer, and an AI assistant that can open folders.** That second part matters more
-than it sounds.
+**A computer, an AI assistant that can open folders, and a paid plan for it.** Those
+last two matter more than they sound.
 
 The chat apps on your phone — ChatGPT, Claude, Gemini — cannot save files. They can
 answer a question about your pigs, but they cannot write today's log and still have it
 tomorrow. That is the whole point of this repo, so a phone chat app is not enough.
 
-What works:
+What you need is a *coding* assistant — one that opens a folder and writes files:
 
 | Tool | Where it runs |
 |---|---|
 | **Claude Code** | A computer, or a browser at `claude.ai/code` |
-| **Codex** | A computer, or inside the ChatGPT app, connected to a GitHub repo |
+| **Codex** | A computer, or connected to a GitHub repo |
 | **Cursor**, or another coding assistant that can read and write files | A computer |
 
-These assistants are paid tools. **This repo is free, and it works without any of
-them** — every record is plain text you can write by hand. The assistant saves you the
-typing, not the records.
+**A free account will not be enough.** Keeping records means many small edits over
+months, and free allowances run out long before that. Budget for a paid subscription to
+one of these before you start, or you will stop halfway through a season — which is
+worse than never starting, because half a season of records tells you nothing.
+
+**This repo is free, and it works without any of them.** Every record is plain text you
+can write by hand. The assistant saves you the typing, not the records.
 
 Git is optional. It gives you an undo button and a history, which is worth having, but
 the repo is just a folder and works as one.
