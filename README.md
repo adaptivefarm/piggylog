@@ -120,6 +120,27 @@ share.
 
 ---
 
+## Tell me how it goes
+
+This is new, and it was built around one farm's way of working. Yours will be
+different, and that is the useful part.
+
+Email **hello@adaptive.farm**. What helps most:
+
+- What you had to do by hand because the assistant did not understand you
+- What you stopped using after a week, and why
+- Anything it got wrong about pigs, feed, or money
+- What you wanted it to do and it could not
+
+Telling me it did not work is more useful than telling me it did. Write in whatever
+language you prefer.
+
+**You do not need to send your records.** Just say what happened. Your logs, prices and
+buyers are yours, and nothing here uploads them anywhere.
+
+If you would rather report a problem in public, open an issue on GitHub instead. Email
+is fine, and usually faster.
+
 ## Where this came from
 
 Extracted from a working system of record used on a family farm in Nueva Ecija,

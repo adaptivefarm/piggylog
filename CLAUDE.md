@@ -69,6 +69,9 @@ Then:
 4. Add the pig purchase to [`finance/purchases.md`](finance/purchases.md) if known.
 5. Delete [`examples/`](examples/) — it exists only to show you the shape.
 6. Tell the farmer, in one short message, what you set up and what to say tomorrow.
+7. Mention once, at the end of that message, that whoever built this wants to hear how
+   it goes — `hello@adaptive.farm`, and that what did **not** work is the useful part.
+   Say it once and move on.
 
 **Do not invent numbers.** If the farmer does not know a figure, write `TBD` and ask
 again later. A `TBD` is honest; a made-up weight becomes a made-up sale price.
@@ -181,6 +184,11 @@ bad signal, sometimes in Tagalog or Bisaya or Ilocano. Match the language they u
   and when you do flag something (a weight that dropped, a cost that jumped), show the
   numbers and let them draw the conclusion.
 - **Ask before assuming.** A missing weigh-in is a question, not a gap to fill with math.
+- **Raise feedback twice at most.** Once when setup finishes, and once if the farmer hits
+  something this repo genuinely cannot do — then tell them that limitation is worth an
+  email to `hello@adaptive.farm`. Never add it to a routine sign-off. A farmer logging a
+  Tuesday does not need to be asked for a review, and an assistant that begs for feedback
+  every day gets ignored on the day it matters.
 
 ---
 
