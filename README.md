@@ -24,6 +24,32 @@ using the assistant tomorrow, every record is still readable and still yours.
 
 ---
 
+## What you need
+
+**A computer, and an AI assistant that can open folders.** That second part matters more
+than it sounds.
+
+The chat apps on your phone — ChatGPT, Claude, Gemini — cannot save files. They can
+answer a question about your pigs, but they cannot write today's log and still have it
+tomorrow. That is the whole point of this repo, so a phone chat app is not enough.
+
+What works:
+
+| Tool | Where it runs |
+|---|---|
+| **Claude Code** | A computer, or a browser at `claude.ai/code` |
+| **Codex** | A computer, or inside the ChatGPT app, connected to a GitHub repo |
+| **Cursor**, or another coding assistant that can read and write files | A computer |
+
+These assistants are paid tools. **This repo is free, and it works without any of
+them** — every record is plain text you can write by hand. The assistant saves you the
+typing, not the records.
+
+Git is optional. It gives you an undo button and a history, which is worth having, but
+the repo is just a folder and works as one.
+
+---
+
 ## Getting started
 
 **1. Get the files.** Download this repository, or if you use git:
@@ -33,7 +59,8 @@ git clone https://github.com/adaptivefarm/piggylog.git my-farm
 cd my-farm
 ```
 
-**2. Open it with an AI coding assistant.** Claude Code, Codex, Cursor — any of them.
+**2. Open the folder with a coding assistant.** Claude Code, Codex or Cursor — see
+the table above. It has to be one that can read and write files.
 
 **3. Say this:**
 
